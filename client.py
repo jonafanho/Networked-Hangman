@@ -1,64 +1,39 @@
-# client.py
-# This is the client file for the chat program.
-# Includes socket sending and receiving.
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar 29 12:16:01 2019
+
+@author: JongHyuk
+"""
 
 from socket import *
-import threading
-import sys
 
-# set up socket to connect to server
-clientSocket = socket(AF_INET, SOCK_STREAM) # TCP socket
-# check for command line arguments
-if len(sys.argv) >= 2:
-	# if at least two arguments, grab the second argument to use as server name
-	serverName = sys.argv[1]
-else:
-	# if no second argument
-	serverName = "localhost"
-if len(sys.argv) >= 3:
-	# if at least three arguments, grab the third argument to use as server port
-	serverPort = int(sys.argv[2])
-else:
-	# if no third argument
-	serverPort = 43500
-try:
-	# try connecting to custom server name and port
-	clientSocket.connect((serverName, serverPort))
-	print("Connected to " + serverName + ":" + str(serverPort))
-except:
-	# if that doesn't work, try localhost port 43500
-	clientSocket.connect(("localhost", 43500))
-	print("Connected to localhost:43500")
+from _thread import *
 
-name = input("Username: ") # ask for user's name, will be used in chat messages
-stop = 0 # flag to stop the input thread
 
-# this function repeatedly gets the terminal input and sends it to the server
-def getInput():
-	send = input()
-	global room # make the room variable readable on a separate thread
-	if len(send) > 0:
-		try:
-			clientSocket.send(send.encode("utf-8")) # encode and send the message
-		except:
-			print("Error sending message!")
-	global stop
-	if stop == 0:
-		getInput() # loop function back to itself
+serverName = 'localhost'
+serverPort = 43500
+clientSocket = socket(AF_INET, SOCK_STREAM)
+clientSocket.connect((serverName,serverPort))
 
-# start a thread to get user input so that it doesn't block the receiving program
-threading.Thread(target=getInput).start()
+print( "You have successfully connected!!")
 
-# loop client forever
+#this function will be called using thread. Simple receiving function
+def recv(socket):
+    while True:
+        msg = clientSocket.recv(1024)
+        print(msg.decode())
+
+name = input("Please enter your name:")
+
 while 1:
-	try:
-		data = clientSocket.recv(1024).decode("utf-8") # read messages from server
-		if len(data) > 0:
-			print(data)
-	except:
-		# if there's an error receiving messages, assume something bad happened and exit
-		break
+    print("Please enter your guess")
+    start_new_thread(recv,(clientSocket,))
+    msg = input()
 
-stop = 1 # tell the input thread to stop
-# close the connection
-clientSocket.close()
+    msgOut = name +": "+msg
+    clientSocket.send(msgOut.encode())
+    
+
+
+ 
+    

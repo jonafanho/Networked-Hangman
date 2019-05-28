@@ -1,55 +1,67 @@
-# server.py
-# This is the server file for the chat program.
-# Includes socket sending and receiving as well as a couple of bots.
-
 from socket import *
+from random import *
+from select import *
 import sys
-import random
-import time
-import math
-import urllib.request
 
-# set up socket to wait for connections
-serverSocket = socket(AF_INET, SOCK_STREAM) # TCP (reliable)
-# check for command line arguments
-if len(sys.argv) >= 2:
-	# if at least two arguments, grab the second argument to use as server port
-	serverPort = int(sys.argv[1])
-else:
-	# if no second argument
-	serverPort = 43500
-serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1) # make port reusable
-serverSocket.bind(("", serverPort))
-serverSocket.listen(1)
-serverSocket.setblocking(0) # make socket non-blocking
-print("Server ready on port " + str(serverPort))
 
-clients = [] # list of connected clients
+serverPort = 43500
+serverSoc = socket(AF_INET,SOCK_STREAM)
+serverSoc.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
+serverSoc.bind (('',serverPort))
+serverSoc.listen(5)
+serverSoc.setblocking(0)
+clients = [serverSoc]
+usr = []
+hangman = [" ------------\n|           \n|           \n|         \n|        \n|            \n-------------\n"
+           ," ------------\n|      |     \n|           \n|         \n|         \n|            \n-------------\n"
+           ," ------------\n|      |     \n|      O     \n|         \n|         \n|            \n-------------\n"
+           ," ------------\n|      |     \n|      O     \n|      |     \n|         \n|            \n-------------\n"
+           ," ------------\n|      |     \n|      O     \n|     /|    \n|         \n|            \n-------------\n"
+           ," ------------\n|      |     \n|      O     \n|     /|\    \n|         \n|            \n-------------\n"
+           ," ------------\n|      |     \n|      O     \n|     /|\    \n|     /      \n|            \n-------------\n"
+           ," ------------\n|      |     \n|      O     \n|     /|\    \n|     / \    \n|            \n-------------\n"]
+word = "hello"
 
-stop = 0 # flag to exit the loop
+jokelist =["Today at the bank, an old lady asked me to help check her balance. So I pushed her over","I bought some shoes from a drug dealer. I don't know what he laced them with, but I've been tripping all day.","My dog used to chase people on a bike a lot. It got so bad, finally I had to take his bike away.", "I'm so good at sleeping. I can do it with my eyes closed","H2O is water and H2O2 is hydrogen peroxide. What is H2O4?\n drinking"]
 
-# omitting while loop means the server will run once!
-while 1:
-	# accept connection from client
-	try:
-		connectionSocket, addr = serverSocket.accept()
-		clients.append((connectionSocket, addr)) # add new client to the master list
-		if len(greeting) > 0:
-			connectionSocket.send(greeting.encode("utf-8"))
-		print(str(len(clients)) + " client(s) connected")
-	except:
-		i=0 # do nothing
-	# loop through all connected clients
-	for client in clients:
-		# try to receive data from each client
-		try:
-			sentence = client[0].recv(1024)
-		except:
-			sentence = ""
-		if len(sentence) > 0:
-			print(sentence.decode("utf-8"))
-	if stop == 1:
-		# loop through all clients and close connection
-		for client in clients:
-			client[0].close()
-		exit() # exit python program
+msgSend = ''
+print("Server Started")
+i = 0
+"""Select method to connect multiple clients, send, and receive msgs to, from clients"""
+while True:
+    readable,writable, exception = select(clients,clients,[])
+    for s in readable:
+        if s == serverSoc:
+            conn,addr = s.accept()
+            #when each client connects, the server prints address
+            print(addr,"has Connected")
+            clients.append(conn)
+        else:
+            """Use try method to avoid abortion of server when each client disconnects"""
+            try:
+                data = s.recv(1024)
+                
+                try:
+                    # if there is data coming, then decode to print, and send the msgs out to all users
+                    if data:
+                        guess = data.decode()
+                        if guess not in word:
+                            i+=1
+                            if i > 7:
+                                i=0
+                                msgsend = "Game over!"
+                            else:
+                                msgsend = hangman[i]
+                            
+                        else:
+                            msgsend = "correct"
+                        for ss in writable:
+                            ss.send(msgsend.encode())
+                except:
+                    continue
+            
+            except:
+                continue
+        
+                
+       
