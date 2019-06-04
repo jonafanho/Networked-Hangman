@@ -31,7 +31,7 @@ while 1:
     msg = input()
 
     msgOut = name +": "+msg
-    clientSocket.send(msg.encode())
+    clientSocket.send(msgOut.encode())
     
 
 

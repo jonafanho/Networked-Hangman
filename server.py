@@ -20,13 +20,13 @@ hangman = [" ------------\n|           \n|           \n|         \n|        \n| 
            ," ------------\n|      |     \n|      O     \n|     /|\    \n|         \n|            \n-------------\n"
            ," ------------\n|      |     \n|      O     \n|     /|\    \n|     /      \n|            \n-------------\n"
            ," ------------\n|      |     \n|      O     \n|     /|\    \n|     / \    \n|            \n-------------\n"]
-wrd = "hello"
-word = list(wrd)
+word = "hello"
+
+jokelist =["Today at the bank, an old lady asked me to help check her balance. So I pushed her over","I bought some shoes from a drug dealer. I don't know what he laced them with, but I've been tripping all day.","My dog used to chase people on a bike a lot. It got so bad, finally I had to take his bike away.", "I'm so good at sleeping. I can do it with my eyes closed","H2O is water and H2O2 is hydrogen peroxide. What is H2O4?\n drinking"]
+
 msgSend = ''
 print("Server Started")
 i = 0
-letters = len(word)*"_"
-letters = list(letters)
 """Select method to connect multiple clients, send, and receive msgs to, from clients"""
 while True:
     readable,writable, exception = select(clients,clients,[])
@@ -39,27 +39,22 @@ while True:
         else:
             """Use try method to avoid abortion of server when each client disconnects"""
             try:
-                data = s.recv(1024).decode()
+                data = s.recv(1024)
                 
                 try:
-                    
+                    # if there is data coming, then decode to print, and send the msgs out to all users
                     if data:
-                        if data not in word:
-                            print(data)
-                            print(letters)
+                        guess = data.decode()
+                        if guess not in word:
                             i+=1
                             if i > 7:
                                 i=0
                                 msgsend = "Game over!"
                             else:
-                                let = str(letters)
-                                msgsend = hangman[i] + let
+                                msgsend = hangman[i]
+                            
                         else:
-                            if len(data) is 1:
-                                corr = wrd.find(data)
-                                letters[corr] = data
-                            letter = str(letters)
-                            msgsend = hangman[i]+"Correct!\n" +letter
+                            msgsend = "correct"
                         for ss in writable:
                             ss.send(msgsend.encode())
                 except:
