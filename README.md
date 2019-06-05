@@ -17,5 +17,5 @@ Repeated guess will not be counted as an attempt
 
 The game is over when there is no more unknown letters of the word or 8 missed attempts
 
-When game is over, the host will decide on the next host among other players.
+When game is over, the order the players are connected decide the next game host.
 
