@@ -1,10 +1,30 @@
 from socket import *
 from _thread import *
+import sys
 
-serverName = "localhost"
-serverPort = 43500
-clientSocket = socket(AF_INET, SOCK_STREAM)
-clientSocket.connect((serverName,serverPort))
+# set up socket to connect to server
+clientSocket = socket(AF_INET, SOCK_STREAM) # TCP socket
+# check for command line arguments
+if len(sys.argv) >= 2:
+	# if at least two arguments, grab the second argument to use as server name
+	serverName = sys.argv[1]
+else:
+	# if no second argument
+	serverName = "localhost"
+if len(sys.argv) >= 3:
+	# if at least three arguments, grab the third argument to use as server port
+	serverPort = int(sys.argv[2])
+else:
+	# if no third argument
+	serverPort = 43500
+try:
+	# try connecting to custom server name and port
+	clientSocket.connect((serverName, serverPort))
+	print("Connected to " + serverName + ":" + str(serverPort))
+except:
+	# if that doesn't work, try localhost port 43500
+	clientSocket.connect(("localhost", 43500))
+	print("Connected to localhost:43500")
 
 print("You have successfully connected!")
 

@@ -3,13 +3,22 @@ from socket import *
 import random
 import sys
 
-serverPort = 43500
-serverSoc = socket(AF_INET,SOCK_STREAM)
-serverSoc.setsockopt(SOL_SOCKET,SO_REUSEADDR,1)
-serverSoc.bind (("",serverPort))
-serverSoc.listen(1)
-serverSoc.setblocking(0)
-clients = [serverSoc]
+# set up socket to wait for connections
+serverSocket = socket(AF_INET, SOCK_STREAM) # TCP (reliable)
+# check for command line arguments
+if len(sys.argv) >= 2:
+	# if at least two arguments, grab the second argument to use as server port
+	serverPort = int(sys.argv[1])
+else:
+	# if no second argument
+	serverPort = 43500
+serverSocket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1) # make port reusable
+serverSocket.bind(("", serverPort))
+serverSocket.listen(1)
+serverSocket.setblocking(0) # make socket non-blocking
+print("Server ready on port " + str(serverPort))
+
+clients = [serverSocket]
 hangman = [" ------------\n|           \n|           \n|         \n|        \n|            \n-------------\n"
            ," ------------\n|      |     \n|           \n|         \n|         \n|            \n-------------\n"
            ," ------------\n|      |     \n|      O     \n|         \n|         \n|            \n-------------\n"
@@ -89,7 +98,7 @@ resetGame()
 while True:
 	readable, writable, exception = select(clients,clients,[])
 	for s in readable:
-		if s == serverSoc:
+		if s == serverSocket:
 			conn, addr = s.accept()
 			# when each client connects, the server prints address
 			print(addr, "has Connected")
