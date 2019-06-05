@@ -24,14 +24,29 @@ print("Server started")
 guessed = ""
 word = ""
 i = 0
+players = [] # a list of connected players
+player = 0 # currently selected player
+scores = []
+state = 0
 
 def resetGame():
 	global guessed
 	guessed = "" # what the player has already guessed
-	global word
-	word = WORDS[random.randint(0,len(WORDS)-1)].upper() # the secret word
 	global i
 	i = 0 # number of wrong guesses
+	global player
+	global players
+	player = player + 1
+	if player >= len(players):
+		player = 0
+	global state
+	state = 0
+
+def getScores():
+	text = "Scores:\n"
+	for j in range(len(players)):
+		text += "  " + players[j] + ": " + str(scores[j]) + "\n"
+	return text + "\n"
 
 def getBoard():
 	# send the current board state
@@ -42,7 +57,7 @@ def getBoard():
 		if not letter in guessed:
 			secretWord = secretWord.replace(letter, "_")
 	msgSend += "The word is"
-	msgSend += secretWord.replace("", " ") + "\n"	
+	msgSend += secretWord.replace("", " ") + "\n"
 	# send the guesses
 	msgSend += "You've guessed "
 	for letter in guessed:
@@ -52,14 +67,18 @@ def getBoard():
 	msgSend = msgSend.replace("You've guessed so far.\n", "")
 	# if win
 	if not "_" in secretWord:
-		msgSend += "You won!\n\n"
+		for j in range(len(players)):
+			if j != player:
+				scores[j] = scores[j] + 1
+		msgSend += getScores()
+		msgSend += "The guessing player(s) win!\nPress enter to continue."
 		resetGame()
-		msgSend += getBoard()
 	# if lose
 	elif i > 7:
-		msgSend += "Game over!\nThe word was " + word + ".\n\n"
+		scores[player] = scores[player] + 1
+		msgSend += getScores()
+		msgSend += "The game master " + players[player] + " wins!\nThe word was " + word + ".\nPress enter to continue."
 		resetGame()
-		msgSend += getBoard()
 	# if neither win or lose
 	else:
 		msgSend += "Enter a guess:"
@@ -73,7 +92,7 @@ while True:
 		if s == serverSoc:
 			conn, addr = s.accept()
 			# when each client connects, the server prints address
-			print(addr,"has Connected")
+			print(addr, "has Connected")
 			clients.append(conn)
 		else:
 			"""Use try method to avoid abortion of server when each client disconnects"""
@@ -82,24 +101,63 @@ while True:
 				# if there is data coming, then decode to print, and send the msgs out to all users
 				if data:
 					guess = data.decode().upper()
-					# send board when new client joins
-					if guess == "JOIN":
-						msgSend = getBoard()
-						# send to all clients
+					# if state is 0, wait for player to make a word
+					if state == 0:
+						if guess.startswith("JOIN "):
+							players.append(guess[5:])
+							scores.append(0)
+							msgSend = "/" + guess[5:] + " You are the game master!\n"
+							msgSend += "Type a word, or use /random to generate a random word."
+						else:
+							msgSend = "/" + players[player] + " You are the game master!\n"
+							msgSend += "Type a word, or use /random to generate a random word."
+						state = 1
 						for ss in writable:
 							ss.send(msgSend.encode())
-					# else treat input is a guess
-					else:
-						print(guess)
-						guess = guess.split(" ")[1][0]
-						if not guess in guessed:
-							if not guess in word:
-								i += 1
-							guessed += guess
-							guessed = sorted(guessed)
+					# if state is 1, wait for game master
+					elif state == 1:
+						if guess.startswith("JOIN "):
+							players.append(guess[5:])
+							scores.append(0)
+							msgSend = "~" + players[player] + " Please wait for the game master."
+							for ss in writable:
+								ss.send(msgSend.encode())
+						elif guess.startswith(players[player] + ": "):
+							if guess.startswith(players[player] + ": /RANDOM"):
+								word = WORDS[random.randint(0,len(WORDS)-1)].upper()
+							else:
+								word = guess.split(" ")[1]
+							state = 2
+							msgSend = getBoard()
+							for ss in writable:
+								ss.send(msgSend.encode())
+						else:
+							msgSend = "~" + players[player] + " Please wait for the game master."
+							for ss in writable:
+								ss.send(msgSend.encode())
+					# if state is 2, play the game
+					elif state == 2:
+						# send board when new client joins
+						if guess.startswith("JOIN "):
+							players.append(guess[5:])
+							scores.append(0)
 							msgSend = getBoard()
 							# send to all clients
 							for ss in writable:
 								ss.send(msgSend.encode())
+						# else treat input is a guess
+						else:
+							print(guess)
+							guess = guess.split(" ")[1][0]
+							if not guess in guessed:
+								if not guess in word:
+									i += 1
+								guessed += guess
+								guessed = sorted(guessed)
+								msgSend = getBoard()
+								# send to all clients
+								for ss in writable:
+									ss.send(msgSend.encode())
+					print(msgSend)
 			except:
 				continue

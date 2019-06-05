@@ -11,11 +11,18 @@ print("You have successfully connected!")
 # this function will be called using thread. Simple receiving function
 def recv(socket):
 	while True:
-		msg = clientSocket.recv(1024)
-		print(msg.decode())
+		msg = clientSocket.recv(1024).decode()
+		if msg.startswith("/"):
+			if msg.startswith("/" + name + " "):
+				print(msg.replace("/" + name + " ", ""))
+		elif msg.startswith("~"):
+			if not msg.startswith("~" + name + " "):
+				print(msg[msg.find(" ") + 1:])
+		else:
+			print(msg)
 
-name = input("Please enter your name: ").replace(" ", "_")
-clientSocket.send(b"join")
+name = input("Please enter your name: ").replace(" ", "_").upper()
+clientSocket.send(("join " + name).encode())
 start_new_thread(recv,(clientSocket,))
 
 while 1:
