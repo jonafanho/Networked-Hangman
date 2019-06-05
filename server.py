@@ -145,6 +145,8 @@ while True:
 							# send to all clients
 							for ss in writable:
 								ss.send(msgSend.encode())
+						elif "/SAY " in guess:
+							msgSend = guess.replace("/SAY ", "")
 						# else treat input is a guess
 						else:
 							print(guess)
@@ -155,9 +157,9 @@ while True:
 								guessed += guess
 								guessed = sorted(guessed)
 								msgSend = getBoard()
-								# send to all clients
-								for ss in writable:
-									ss.send(msgSend.encode())
+						# send to all clients
+						for ss in writable:
+							ss.send(msgSend.encode())
 					print(msgSend)
 			except:
 				continue
