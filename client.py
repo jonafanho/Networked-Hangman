@@ -28,21 +28,24 @@ except:
 
 print("You have successfully connected!")
 
-# this function will be called using thread. Simple receiving function
+# this function will be called using a thread
+# it is a receiving function to read messages from the server.
 def recv(socket):
 	while True:
 		msg = clientSocket.recv(1024).decode()
-		if msg.startswith("/"):
+		if msg.startswith("/"): # show message if it starts with /<myname>
 			if msg.startswith("/" + name + " "):
 				print(msg.replace("/" + name + " ", ""))
-		elif msg.startswith("~"):
+		elif msg.startswith("~"): # don't show message if it starts with ~<myname>
 			if not msg.startswith("~" + name + " "):
 				print(msg[msg.find(" ") + 1:])
-		else:
+		else: # print all other messages
 			print(msg)
 
+# ask for name first, then send the "join" message to the server
 name = input("Please enter your name: ").replace(" ", "_").upper()
 clientSocket.send(("join " + name).encode())
+# separate thread for receiving messages
 start_new_thread(recv,(clientSocket,))
 
 while 1:
