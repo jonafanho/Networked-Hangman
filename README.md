@@ -28,6 +28,10 @@ If you are unfamilar with Hangman, [please read the rules before continuing](htt
 
 3. The game is over when all the letters have been guessed or if there are eight incorrect guesses.
     * Repeated guesses of the same letter will be ignored.
+    * Scores will be awarded.
+      * If all the letters have been guess, all players except for the game master will earn one (1) point.
+      * If there are eight incorrect guesses, the game master will earn one (1) point.
+      * Scores are saved until the server closes or when players disconnect.
 
 4. When the game is over, the next player who joined the game will be selected as next game host.
 
